@@ -19,9 +19,9 @@ setup(name='google-model',
                             'dateutils',
                             'requests',
                             'pytz',
-                            'pulsar-client'
-                            #'psycopg2-binary',
-                            #'SQLAlchemy'
+                            'pulsar-client',
+                            'psycopg2-binary',
+                            'SQLAlchemy'
                             ],
           entry_points={
             'console_scripts': [
