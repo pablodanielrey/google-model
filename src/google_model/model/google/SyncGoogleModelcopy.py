@@ -9,26 +9,16 @@ import uuid
 import logging
 import json
 
-from users.model.entities import Usuario, Mail, ErrorGoogle, RespuestaGoogle
 from .GoogleAuthApi import GAuthApis
 
 
-class GoogleModel:
+class SyncGoogleModel:
 
-    dominio_primario = os.environ.get('INTERNAL_DOMAINS').split(',')[0]
-    admin = os.environ.get('ADMIN_USER_GOOGLE')
-    errores_maximos = 5
+    def __init__(self):
+        self.admin = os.environ.get('ADMIN_USER_GOOGLE','sistemas@econo.unlp.edu.ar')
+        self.service = GAuthApis.getServiceAdmin(self.admin)
 
-    if bool(int(os.environ.get('GOOGLE_SYNC',0))):
-        service = GAuthApis.getServiceAdmin(admin)
-    else:
-        service = None
-
-    @classmethod
-    def _chequear_errores(cls, session, uid):
-        errores = session.query(ErrorGoogle).filter(ErrorGoogle.usuario_id == uid).count()
-        return errores > cls.errores_maximos
-            
+    """
 
     @classmethod
     def _obtener_usuario_google_id(cls, usuario):
@@ -44,7 +34,9 @@ class GoogleModel:
                 m.email.split('@')[1] in cls.dominio_primario
         ]
 
-    @classmethod
+    """
+
+    
     def actualizar_o_crear_usuario_en_google(cls, session, usuario):
         usuario_google = cls._obtener_usuario_google_id(usuario)
 

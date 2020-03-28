@@ -19,9 +19,12 @@ setup(name='google-model',
                             'dateutils',
                             'requests',
                             'pytz',
+                            'google-api-python-client', 'google-auth-httplib2', 'google-auth-oauthlib',
                             'pulsar-client',
-                            'psycopg2-binary',
-                            'SQLAlchemy'
+                            #'psycopg2-binary',
+                            #'SQLAlchemy',
+                            'login-model',
+                            'users-model'
                             ],
           entry_points={
             'console_scripts': [

@@ -17,31 +17,53 @@ def handler(signal_received, frame):
 signal(SIGINT, handler)
 
 import pulsar
-
-from sqlalchemy import or_, and_, desc
-from sqlalchemy.orm import joinedload, contains_eager, defer
+from pulsar.schema import JsonSchema
 
 PULSAR_URL = os.environ.get('PULSAR_URL', 'pulsar://localhost:6650')
 PULSAR_TOPIC = os.environ.get('PULSAR_TOPIC', 'google')
 PULSAR_SUBSCRIPTION = os.environ.get('PULSAR_SUBSCRIPTION', 'google')
 
+from .google.SyncGoogleModel import SyncGoogleModel
+from login.model.entities.Login import LoginEvent, LoginEventTypes
+
 class GoogleModel:
 
     def __init__(self):
         self.client = pulsar.Client(PULSAR_URL)
+        self.errors = {}
+        self.give_up_errors = 5
+        self.syncGoogle = SyncGoogleModel()
 
     def __del__(self):
         self.client.close()
 
     def listen(self):
-        consumer = self.client.subscribe(PULSAR_TOPIC, 'google')
+        consumer = self.client.subscribe(PULSAR_TOPIC, PULSAR_SUBSCRIPTION, schema=JsonSchema(LoginEvent))
         while True:
-            msg = consumer.receive()
             try:
-                print(msg.data().decode('utf-8'), msg.message_id())
-                consumer.acknowledge(msg)
+                msg = consumer.receive(timeout_millis=5000)
+                try:
+                    event = msg.value()
+                    username = event.username
+                    credentials = event.credentials
+                    if username not in self.errors:
+                        self.errors[username] = 0
+
+                    if self.errors[username] > self.give_up_errors:
+                        consumer.acknowledge(msg)
+                        continue
+
+                    try:
+                        self.syncGoogle.sync_login(username, credentials)
+                        consumer.acknowledge(msg)
+                    except:
+                        self.errors[username] = self.errors[username] + 1
+                        consumer.negative_acknowledge(msg)
+                    
+                except:
+                    consumer.negative_acknowledge(msg)
             except:
-                consumer.negative_acknowledge(msg)
+                pass
         self.client.close()
 
 

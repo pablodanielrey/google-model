@@ -1,3 +1,6 @@
+
+"""
+
 import pytz
 import uuid
 from datetime import datetime, time, timedelta
@@ -25,3 +28,4 @@ class GoogleLog(Base):
     authorizer_id = Column(String)
     data = Column(String)
 
+"""

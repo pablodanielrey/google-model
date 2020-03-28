@@ -1,3 +1,4 @@
+"""
 import os
 import uuid
 from sqlalchemy import create_engine, func, Column, String, DateTime
@@ -14,3 +15,4 @@ class MyBaseClass:
     deleted = Column(DateTime)
 
 Base = declarative_base(cls=MyBaseClass)
+"""
