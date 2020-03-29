@@ -11,12 +11,15 @@ import json
 
 from .GoogleAuthApi import GAuthApis
 
+class UserNotFoundException(Exception):
+    pass
 
 class SyncGoogleModel:
 
     def __init__(self):
         self.admin = os.environ.get('ADMIN_USER_GOOGLE','sistemas@econo.unlp.edu.ar')
-        self.service = GAuthApis.getServiceAdmin(self.admin)
+        authApi = GAuthApis()
+        self.service = authApi.getAdminService(self.admin)
 
     def _get_google_uid(self, username):
         return f"{username}@econo.unlp.edu.ar"
@@ -31,9 +34,14 @@ class SyncGoogleModel:
             datos["changePasswordAtNextLogin"] = False
             datos['password'] = credentials
             r = self.service.users().update(userKey=usr,body=datos).execute()
-            if not r.ok:
+            if not r:
+                print(r.response)
                 raise Exception(r.response)
 
         except Exception as e:
-           ''' el usuario no existe '''
-           raise e
+            error = json.loads(e.content)
+            if error['error']['code'] == 404:
+                ''' el usuario no existe '''
+                print(f"El usuario {username} no existe dentro de google")
+                raise UserNotFoundException(username)
+            raise e

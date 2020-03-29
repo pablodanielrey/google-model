@@ -23,7 +23,8 @@ PULSAR_URL = os.environ.get('PULSAR_URL', 'pulsar://localhost:6650')
 PULSAR_TOPIC = os.environ.get('PULSAR_TOPIC', 'google')
 PULSAR_SUBSCRIPTION = os.environ.get('PULSAR_SUBSCRIPTION', 'google')
 
-from .google.SyncGoogleModel import SyncGoogleModel
+from .google.SyncGoogleModel import SyncGoogleModel, UserNotFoundException
+
 from login.model.entities.Login import LoginEvent, LoginEventTypes
 
 class GoogleModel:
@@ -49,13 +50,18 @@ class GoogleModel:
                     if username not in self.errors:
                         self.errors[username] = 0
 
-                    if self.errors[username] > self.give_up_errors:
+                    if self.errors[username] >= self.give_up_errors:
                         consumer.acknowledge(msg)
                         continue
 
                     try:
                         self.syncGoogle.sync_login(username, credentials)
                         consumer.acknowledge(msg)
+
+                    except UserNotFoundException:
+                        self.errors[username] = self.give_up_errors
+                        consumer.acknowledge(msg)
+
                     except:
                         self.errors[username] = self.errors[username] + 1
                         consumer.negative_acknowledge(msg)
