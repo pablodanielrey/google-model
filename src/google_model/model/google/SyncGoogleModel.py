@@ -47,6 +47,8 @@ class SyncGoogleModel:
                     ''' el usuario no existe '''
                     print(f"El usuario {username} no existe dentro de google")
                     raise UserNotFoundException(username)
+            except UserNotFoundException as e1:
+                raise e1
             except Exception as e1:
                 raise e1
             raise e
