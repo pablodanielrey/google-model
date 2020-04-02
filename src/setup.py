@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 
 setup(name='google-model',
-          version='0.0.3',
+          version='0.0.4',
           description='Modelo de la plataforma de google',
           url='https://github.com/pablodanielrey/google-model',
           author='Desarrollo DiTeSi, FCE',
