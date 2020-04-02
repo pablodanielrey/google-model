@@ -26,6 +26,7 @@ class SyncGoogleModel:
 
     def sync_login(self, username, credentials):
         try:
+            # pylint: disable=no-member
             usr = self._get_google_uid(username)
 
             """ https://developers.google.com/resources/api-libraries/documentation/admin/directory_v1/python/latest/admin_directory_v1.users.html """
@@ -39,9 +40,13 @@ class SyncGoogleModel:
                 raise Exception(r.response)
 
         except Exception as e:
-            error = json.loads(e.content)
-            if error['error']['code'] == 404:
-                ''' el usuario no existe '''
-                print(f"El usuario {username} no existe dentro de google")
-                raise UserNotFoundException(username)
+            try:
+                # pylint: disable=no-member
+                error = json.loads(e.content)
+                if error['error']['code'] == 404:
+                    ''' el usuario no existe '''
+                    print(f"El usuario {username} no existe dentro de google")
+                    raise UserNotFoundException(username)
+            except Exception as e1:
+                raise e1
             raise e
