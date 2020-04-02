@@ -36,7 +36,7 @@ class SyncGoogleModel:
             datos['password'] = credentials
             r = self.service.users().update(userKey=usr,body=datos).execute()
             if not r:
-                print(r.response)
+                logging.info(r.response)
                 raise Exception(r.response)
 
         except Exception as e:
@@ -45,7 +45,7 @@ class SyncGoogleModel:
                 error = json.loads(e.content)
                 if error['error']['code'] == 404:
                     ''' el usuario no existe '''
-                    print(f"El usuario {username} no existe dentro de google")
+                    logging.error(f"El usuario {username} no existe dentro de google")
                     raise UserNotFoundException(username)
             except UserNotFoundException as e1:
                 raise e1

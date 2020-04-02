@@ -11,7 +11,7 @@ from signal import signal, SIGINT
 
 def handler(signal_received, frame):
     # Handle any cleanup here
-    print('SIGINT or CTRL-C detected. Exiting gracefully')
+    logging.warn('CTRL-C Saliendo')
     sys.exit(0)
 
 signal(SIGINT, handler)
@@ -39,6 +39,7 @@ class GoogleModel:
         self.client.close()
 
     def listen(self):
+        logging.info(f"conectando cliente pulsar")
         consumer = self.client.subscribe(PULSAR_TOPIC, PULSAR_SUBSCRIPTION, schema=JsonSchema(LoginEvent))
         while True:
             try:
@@ -47,29 +48,40 @@ class GoogleModel:
                     event = msg.value()
                     username = event.username
                     credentials = event.credentials
+                    logging.info(f"mensaje recibido {username}")
+
                     if username not in self.errors:
                         self.errors[username] = 0
 
                     if self.errors[username] >= self.give_up_errors:
+                        logging.warn(f"{username} demasiados errores encontrados")
                         consumer.acknowledge(msg)
                         continue
 
                     try:
+                        logging.info(f"sincronizando con google {username}")
                         self.syncGoogle.sync_login(username, credentials)
                         consumer.acknowledge(msg)
+                        logging.info(f"sincronización exitorsa")
 
-                    except UserNotFoundException:
+                    except UserNotFoundException as e:
+                        logging.exception(e)
                         self.errors[username] = self.give_up_errors
                         consumer.acknowledge(msg)
 
-                    except:
+                    except Exception as e:
+                        logging.exception(e)
                         self.errors[username] = self.errors[username] + 1
                         consumer.negative_acknowledge(msg)
                     
-                except:
+                except Exception as e1:
+                    logging.exception(e1)
                     consumer.negative_acknowledge(msg)
             except:
+                # el timeout del receive
                 pass
+
+        logging.info(f"Cerrando cliente pulsar")    
         self.client.close()
 
 
