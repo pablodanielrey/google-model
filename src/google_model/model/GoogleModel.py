@@ -26,6 +26,7 @@ PULSAR_SUBSCRIPTION = os.environ.get('PULSAR_SUBSCRIPTION', 'google')
 from .google.SyncGoogleModel import SyncGoogleModel, UserNotFoundException
 
 from login.model.entities.Login import LoginEvent, LoginEventTypes
+from users.model.entities.User import UserEventTypes, UserEvent, User
 
 class GoogleModel:
 
@@ -40,8 +41,25 @@ class GoogleModel:
 
     def listen(self):
         logging.info(f"conectando cliente pulsar")
-        consumer = self.client.subscribe(PULSAR_TOPIC, PULSAR_SUBSCRIPTION, schema=JsonSchema(LoginEvent))
+        #consumer = self.client.subscribe(PULSAR_TOPIC, PULSAR_SUBSCRIPTION, schema=JsonSchema(LoginEvent))
+        user_consumer = self.client.subscribe(f'user_{PULSAR_TOPIC}', PULSAR_SUBSCRIPTION, schema=JsonSchema(UserEvent))
         while True:
+            try:
+                msg = user_consumer.receive(timeout_millis=5000)
+                try:
+                    event : UserEvent = msg.value()
+                    data = event.user
+                    udata = json.loads(data)
+                    logging.info(f"mensaje recibido {data}")
+
+                except Exception as e1:
+                    logging.exception(e1)
+                    #consumer.negative_acknowledge(msg)                    
+
+            except:
+                # el timeout del receive
+                pass            
+
             try:
                 msg = consumer.receive(timeout_millis=5000)
                 try:
